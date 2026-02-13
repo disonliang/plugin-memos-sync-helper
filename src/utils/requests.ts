@@ -138,6 +138,20 @@ export class Requests {
             response = await this.delete(pathName, data);
         }
 
-        return (response !== null && response.status === STATUS.OK) ? await response.json() : null;
+        if (response === null) {
+            return null;
+        }
+
+        if (response.status === STATUS.OK) {
+            try {
+                return await response.json();
+            } catch (error) {
+                console.error('Failed to parse JSON response:', error);
+                return null;
+            }
+        } else {
+            console.warn(`API request failed: ${response.status} ${response.statusText}`);
+            return null;
+        }
     }
 }

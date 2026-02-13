@@ -1,5 +1,5 @@
 import {pluginConfigData} from "@/index";
-import {DownloadResourceByName, GetAuthStatus, GetAuthStatus_v2, GetResourceBinary, ListMemos, ListMemos_v0_24, ListMemos_v0_25} from "@/controllers/memos/v2/api"
+import {DownloadResourceByName, GetAuthStatus, GetResourceBinary, ListMemos, ListMemos_v0_24, ListMemos_v0_25} from "@/controllers/memos/v2/api"
 import {debugMessage, hasCommonElements, isEmptyValue} from "@/utils";
 import {toChinaTime, formatDateTime,} from "@/utils/misc/time";
 import {IResGetMemos} from "@/types/memos";
@@ -18,13 +18,8 @@ export class MemosApiServiceV2 {
      * @private
      */
     private static async initData() {
-        if (API_VERSION.V2_API.includes(pluginConfigData.base.version)) {
-            const userData = await GetAuthStatus_v2();
-            this.username = userData.name;
-        } else {
-            const userData = await GetAuthStatus();
-            this.username = userData.name;
-        }
+        const userData = await GetAuthStatus();
+        this.username = userData.name;
     }
 
     private static async tagFilter(memos: IMemoV2[])  {
@@ -177,13 +172,8 @@ export class MemosApiServiceV2 {
      * 授权校验
      */
     static async checkAccessToken() {
-        if (API_VERSION.V2_API.includes(pluginConfigData.base.version)) {
-            const userData = await GetAuthStatus_v2();
-            return !isEmptyValue(userData);
-        } else {
-            const userData = await GetAuthStatus();
-            return !isEmptyValue(userData);
-        }
+        const userData = await GetAuthStatus();
+        return !isEmptyValue(userData);
     }
 
     /**

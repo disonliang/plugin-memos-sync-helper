@@ -37,16 +37,7 @@ export async function GetAuthStatus() {
     return await Requests.send(METHOD.POST, "/api/v1/auth/status");
 }
 
-/**
- * 获取用户的当前身份验证信息 v2
- * @constructor
- */
-export async function GetAuthStatus_v2() {
-    return await Requests.send(METHOD.GET, "/api/v2/user/me");
-}
 
-
-// **************************************** MemoService ****************************************
 
 
 /**

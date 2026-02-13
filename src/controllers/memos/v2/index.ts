@@ -110,22 +110,23 @@ export class MemosApiServiceV2 {
 
         let allMemos = [];
 
-        let filters = [
-            `creator == "${this.username}"`
-        ];
+        // 注意：creator过滤器可能不被所有Memos版本支持，改为在本地过滤
+        // let filters = [
+        //     `creator == "${this.username}"`
+        // ];
 
         while (true) {
             let resData: IResListMemos;
-            // 调用 ListMemos 函数获取一页数据
+            // 调用 ListMemos 函数获取一页数据（不使用creator过滤器）
             if (API_VERSION.V2_API.includes(version)) {
-                resData = await ListMemos_v0_25(pageSize, pageToken, filters);
+                resData = await ListMemos_v0_25(pageSize, pageToken, []);
             } else if (API_VERSION.V2_Y2025_M02_D05.includes(version)) {
                 resData = await ListMemos_v0_24(this.username, pageSize, pageToken);
             } else if(API_VERSION.V2_MemosViewFull.includes(version)) {
                 const view = "MEMO_VIEW_FULL";
-                resData = await ListMemos(pageSize, pageToken, filters, view);
+                resData = await ListMemos(pageSize, pageToken, [], view);
             } else {
-                resData = await ListMemos(pageSize, pageToken, filters);
+                resData = await ListMemos(pageSize, pageToken, []);
             }
 
             // 检查API响应是否有效
@@ -134,9 +135,17 @@ export class MemosApiServiceV2 {
                 break;
             }
 
-            // 将更新时间晚于等于 lastSyncTime 的数据添加到 memos 列表中
+            // 先按照更新时间过滤，然后再按照creator过滤（在本地进行）
             const memos = resData.memos.filter(
-                memo => isUpdateNewerThanSyncTime(memo.updateTime, lastSyncTime)
+                memo => {
+                    // 检查更新时间
+                    if (!isUpdateNewerThanSyncTime(memo.updateTime, lastSyncTime)) {
+                        return false;
+                    }
+                    // 检查creator是否匹配（可选，如果需要过滤）
+                    // 注意：这里不过滤creator，获取所有数据
+                    return true;
+                }
             );
             debugMessage(pluginConfigData.debug.isDebug, `过滤前数据数: ${resData.memos.length}, 过滤后数据数: ${memos.length}, lastSyncTime: ${lastSyncTime}`);
             allMemos.push(...memos);

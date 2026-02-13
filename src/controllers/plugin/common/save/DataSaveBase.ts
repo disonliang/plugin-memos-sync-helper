@@ -1,4 +1,4 @@
-import {SiYuanApiService} from "@/controllers/siyuan";
+import { SiYuanApiService } from "@/controllers/siyuan";
 import {
     appendBlock,
     createDocWithMd,
@@ -7,13 +7,13 @@ import {
     prependBlock,
     removeDoc, setBlockAttrs, updateBlock
 } from "@/controllers/siyuan/api";
-import {pluginConfigData} from "@/index";
-import {debugMessage, isEmptyValue} from "@/utils";
-import {contentsType, CUSTOM_MEMO_ID, CUSTOM_MEMO_UID, deleteMode} from "@/constants/plugin";
-import {IContent, INewMemo} from "@/types/plugin";
-import {IResdoOperations, IResGetChildBlock} from "@/types/siyuan/api";
-import {memosSortKey, syncPlanKey} from "@/constants/components/select";
-import {DataHandleBase} from "@/controllers/plugin/common/handle/DataHandleBase";
+import { pluginConfigData } from "@/index";
+import { debugMessage, isEmptyValue } from "@/utils";
+import { contentsType, CUSTOM_MEMO_ID, CUSTOM_MEMO_UID, deleteMode } from "@/constants/plugin";
+import { IContent, INewMemo } from "@/types/plugin";
+import { IResdoOperations, IResGetChildBlock } from "@/types/siyuan/api";
+import { memosSortKey, syncPlanKey } from "@/constants/components/select";
+import { DataHandleBase } from "@/controllers/plugin/common/handle/DataHandleBase";
 
 
 export abstract class DataSaveBase {
@@ -23,13 +23,13 @@ export abstract class DataSaveBase {
      * MemoId : BlockId
      * @protected
      */
-    protected memoIdLinkBlockId: {[memoId: string]: string};
+    protected memoIdLinkBlockId: { [memoId: string]: string };
 
     /**
      * MemoUid : BlockId
      * @protected
      */
-    protected memoUidLinkBlockId: {[memosId: string]: string};
+    protected memoUidLinkBlockId: { [memosId: string]: string };
 
     /**
      * BlockId : 嵌入内容（uid）
@@ -47,7 +47,7 @@ export abstract class DataSaveBase {
      * 删除列表
      * @protected
      */
-    protected deleteList : any[];
+    protected deleteList: any[];
 
     /**
      * 清理模式
@@ -69,7 +69,7 @@ export abstract class DataSaveBase {
         }
     }
 
-    async main() : Promise<void> {
+    async main(): Promise<void> {
         await this.initData();
         await this.saveData();
         await this.clearData();
@@ -181,7 +181,7 @@ export abstract class DataSaveBase {
      * @param memo
      * @protected
      */
-    protected abstract getMemoId(memo: any) : string;
+    protected abstract getMemoId(memo: any): string;
 
 
     // **************************************** 数据保存 ****************************************
@@ -300,7 +300,7 @@ export abstract class DataSaveBase {
         let pageId = await SiYuanApiService.getDocumentIdByHPath(notebookId, path);
         if (isEmptyValue(pageId)) {
             debugMessage(pluginConfigData.debug.isDebug, "文档ID获取失败", pageId);
-            return ;
+            return;
         }
 
         // 添加标题
@@ -357,19 +357,21 @@ export abstract class DataSaveBase {
     protected async saveBlocks(response: IResdoOperations[], newMemo: any) {
         if (isEmptyValue(response) || response.length === 0) {
             debugMessage(pluginConfigData.debug.isDebug, "列表块ID获取失败", response)
-            return ;
+            return;
         }
 
         let ListBlockId = SiYuanApiService.getBlockId(response);
 
         let childBlocks = await getChildBlocks(ListBlockId);
 
+        let titleBlockId;
         if (isEmptyValue(childBlocks) || childBlocks.length === 0) {
-            debugMessage(pluginConfigData.debug.isDebug, "标题块ID获取失败", childBlocks)
-            return ;
+            debugMessage(pluginConfigData.debug.isDebug, "标题块ID获取失败 (无子块)，尝试使用列表块ID", ListBlockId);
+            titleBlockId = ListBlockId;
+        } else {
+            titleBlockId = childBlocks[0].id;
         }
 
-        let titleBlockId = childBlocks[0].id;
         let contents = newMemo.contents;
         await this.saveContents(titleBlockId, contents);
 
@@ -382,7 +384,7 @@ export abstract class DataSaveBase {
      * @param contents
      * @protected
      */
-    protected async saveContents(titleBlockId: string, contents: IContent[]) : Promise<void> {
+    protected async saveContents(titleBlockId: string, contents: IContent[]): Promise<void> {
         for (let c of contents) {
             let response: IResdoOperations[] = await appendBlock("markdown", c.content, titleBlockId);
             if (!isEmptyValue(response) && c.type === contentsType.embedded) {
@@ -457,7 +459,7 @@ export abstract class DataSaveBase {
      * 批量处理嵌入内容
      * @protected
      */
-    protected async handleEmbeddedContents() : Promise<void> {
+    protected async handleEmbeddedContents(): Promise<void> {
         for (let blockId in this.blockIdLinkEmbeddedContent) {
             let uid = this.blockIdLinkEmbeddedContent[blockId];
             let relatedBlockId = this.memoUidLinkBlockId[uid];
@@ -471,7 +473,7 @@ export abstract class DataSaveBase {
      * @param relatedBlockId
      * @protected
      */
-    protected async handleEmbeddedContent(blockId: string, relatedBlockId: string) : Promise<void> {
+    protected async handleEmbeddedContent(blockId: string, relatedBlockId: string): Promise<void> {
         let content = `{{select * from blocks where id="${relatedBlockId}"}}`;
         await updateBlock("markdown", content, blockId);
     }
@@ -484,7 +486,7 @@ export abstract class DataSaveBase {
      * 清理数据
      * @protected
      */
-    protected async clearData(): Promise<void>{
+    protected async clearData(): Promise<void> {
         // 清理旧数据
         debugMessage(pluginConfigData.debug.isDebug, "正在清理旧数据...");
 
@@ -500,7 +502,7 @@ export abstract class DataSaveBase {
     /**
      * 根据 BlockId 删除旧数据
      */
-    async deleteIdList() : Promise<void> {
+    async deleteIdList(): Promise<void> {
         for (let blockId of this.deleteList) {
             await deleteBlock(blockId);
         }
@@ -509,7 +511,7 @@ export abstract class DataSaveBase {
     /**
      * 根据路径删除旧数据
      */
-    async deletePathList() : Promise<void> {
+    async deletePathList(): Promise<void> {
         for (let path of this.deleteList) {
             await removeDoc(pluginConfigData.base.notebook, path);
         }

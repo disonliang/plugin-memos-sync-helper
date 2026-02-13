@@ -1,15 +1,15 @@
-import {STORAGE_NAME} from "@/constants";
-import {sync_status} from "@/constants/main";
-import {Icons} from "@/constants/assets/icons";
-import {syncPlanKey, tagFilterKey, checkSyncMemosKey} from "@/constants/components/select";
-import {API_VERSION} from "@/constants/memos";
-import {IItemCondition} from "@/types/plugin";
-import {lsNotebooks, pushErrMsg, pushMsg} from "@/controllers/siyuan/api";
-import {MemosServer} from "@/controllers/memos";
-import {debugMessage, isEmptyValue} from "@/utils";
-import PluginMemosSyncHelper, {isMobile, pluginConfigData, topBarElement} from "@/index";
-import {PluginMaster} from "@/controllers/plugin";
-import {IConfig} from "@/types/config/default";
+import { STORAGE_NAME } from "@/constants";
+import { sync_status } from "@/constants/main";
+import { Icons } from "@/constants/assets/icons";
+import { syncPlanKey, tagFilterKey, checkSyncMemosKey } from "@/constants/components/select";
+import { API_VERSION } from "@/constants/memos";
+import { IItemCondition } from "@/types/plugin";
+import { lsNotebooks, pushErrMsg, pushMsg } from "@/controllers/siyuan/api";
+import { MemosServer } from "@/controllers/memos";
+import { debugMessage, isEmptyValue } from "@/utils";
+import PluginMemosSyncHelper, { isMobile, pluginConfigData, topBarElement } from "@/index";
+import { PluginMaster } from "@/controllers/plugin";
+import { IConfig } from "@/types/config/default";
 import moment from "moment";
 
 
@@ -130,7 +130,7 @@ class PlugConfig {
             }
         ]
 
-        const inputItems =[
+        const inputItems = [
             {
                 flag: true,
                 value: pluginConfigData.base.host,
@@ -183,7 +183,7 @@ class PlugConfig {
             }
         }
 
-        for (let item of inputItems){
+        for (let item of inputItems) {
             if (!item.flag) {
                 continue;
             }
@@ -195,7 +195,7 @@ class PlugConfig {
                         tip: `请检查 ${item.text} 是否配置正确！`
                     };
                 }
-                if (item.check[0] === false && !isEmptyValue(item.value) &&  item.value.charAt(0) === '/') {
+                if (item.check[0] === false && !isEmptyValue(item.value) && item.value.charAt(0) === '/') {
                     debugMessage(pluginConfigData.debug.isDebug, `${item.text} 不应以'/'开头`);
                     return {
                         flag: false,
@@ -420,33 +420,34 @@ export async function main(plugin: InstanceType<typeof PluginMemosSyncHelper>) {
             return;
         }
 
+
         const hasNew = await MemosServer.checkNew();
         if (hasNew) {
             // 同步
             await pushMsg("开始同步");
             await PluginMaster.runSync();
             await pushMsg("同步完成！");
+
+            // 修改上次同步时间
+            if (!(pluginConfigData.debug.isDebug && pluginConfigData.debug.isAutoUpdateTime === false)) {
+                debugMessage(pluginConfigData.debug.isDebug, "正在修改上次同步时间……");
+
+                let config: IConfig = pluginConfigData;
+
+                await new Promise<void>((resolve) => {
+                    setTimeout(() => {
+                        config.filter.lastSyncTime = moment().format("YYYY-MM-DD HH:mm:ss");
+                        debugMessage(pluginConfigData.debug.isDebug, "配置", config);
+                        resolve(); // 标志 Promise 的状态已经改变
+                    }, 1000);
+                });
+
+                await plugin.updateConfig(config);
+
+                debugMessage(pluginConfigData.debug.isDebug, "上次同步时间修改完成！");
+            }
         } else {
             await pushMsg("暂无新数据！");
-        }
-
-        // 修改上次同步时间
-        if (!(pluginConfigData.debug.isDebug && pluginConfigData.debug.isAutoUpdateTime === false)) {
-            debugMessage(pluginConfigData.debug.isDebug, "正在修改上次同步时间……");
-
-            let config : IConfig = pluginConfigData;
-
-            await new Promise<void>((resolve) => {
-                setTimeout(() => {
-                    config.filter.lastSyncTime = moment().format("YYYY-MM-DD HH:mm:ss");
-                    debugMessage(pluginConfigData.debug.isDebug, "配置", config);
-                    resolve(); // 标志 Promise 的状态已经改变
-                }, 1000);
-            });
-
-            await plugin.updateConfig(config);
-
-            debugMessage(pluginConfigData.debug.isDebug, "上次同步时间修改完成！");
         }
 
         Sync.syncSuccess();

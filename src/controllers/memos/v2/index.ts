@@ -1,13 +1,13 @@
-import {pluginConfigData} from "@/index";
-import {DownloadResourceByName, GetAuthStatus, GetResourceBinary, ListMemos, ListMemos_v0_24, ListMemos_v0_25} from "@/controllers/memos/v2/api"
-import {debugMessage, hasCommonElements, isEmptyValue} from "@/utils";
-import {toChinaTime, formatDateTime, isUpdateNewerThanSyncTime} from "@/utils/misc/time";
-import {IResGetMemos} from "@/types/memos";
+import { pluginConfigData } from "@/index";
+import { DownloadResourceByName, GetAuthStatus, GetResourceBinary, ListMemos, ListMemos_v0_24, ListMemos_v0_25 } from "@/controllers/memos/v2/api"
+import { debugMessage, hasCommonElements, isEmptyValue } from "@/utils";
+import { toChinaTime, formatDateTime, isUpdateNewerThanSyncTime } from "@/utils/misc/time";
+import { IResGetMemos } from "@/types/memos";
 import moment from "moment";
-import {IMemoV2, IResourceV2} from "@/types/memos/v2";
-import {tagFilterKey} from "@/constants/components/select";
-import {API_VERSION} from "@/constants/memos";
-import {IResListMemos} from "@/types/memos/v2/api";
+import { IMemoV2, IResourceV2 } from "@/types/memos/v2";
+import { tagFilterKey } from "@/constants/components/select";
+import { API_VERSION } from "@/constants/memos";
+import { IResListMemos } from "@/types/memos/v2/api";
 
 
 export class MemosApiServiceV2 {
@@ -25,7 +25,7 @@ export class MemosApiServiceV2 {
         this.username = userData.name;
     }
 
-    private static async tagFilter(memos: IMemoV2[])  {
+    private static async tagFilter(memos: IMemoV2[]) {
         const tagFilterMode = pluginConfigData.filter.tagFilterMode;
 
         // 同步所有数据
@@ -36,7 +36,7 @@ export class MemosApiServiceV2 {
         // 仅同步无标签的数据
         if (tagFilterMode === tagFilterKey.syncNoTag) {
             console.log("仅同步无标签的数据");
-            if (API_VERSION.V2_Y2025_M02_D05.includes(pluginConfigData.base.version)){
+            if (API_VERSION.V2_Y2025_M02_D05.includes(pluginConfigData.base.version)) {
                 return memos.filter(memo => memo.tags.length === 0)
             }
             return memos.filter(memo => memo.property.tags.length === 0)
@@ -45,7 +45,7 @@ export class MemosApiServiceV2 {
         // 不同步无标签的数据
         if (tagFilterMode === tagFilterKey.notSyncNoTag) {
             console.log("不同步无标签的数据");
-            if (API_VERSION.V2_Y2025_M02_D05.includes(pluginConfigData.base.version)){
+            if (API_VERSION.V2_Y2025_M02_D05.includes(pluginConfigData.base.version)) {
                 return memos.filter(memo => memo.tags.length > 0)
             }
             return memos.filter(memo => memo.property.tags.length > 0)
@@ -57,7 +57,7 @@ export class MemosApiServiceV2 {
         // 仅同步指定标签的数据
         if (tagFilterMode === tagFilterKey.syncSpecTag) {
             console.log("仅同步指定标签的数据");
-            if (API_VERSION.V2_Y2025_M02_D05.includes(pluginConfigData.base.version)){
+            if (API_VERSION.V2_Y2025_M02_D05.includes(pluginConfigData.base.version)) {
                 console.log(tags);
                 return memos.filter(memo => hasCommonElements(memo.tags, tags))
             }
@@ -67,7 +67,7 @@ export class MemosApiServiceV2 {
         // 不同步指定标签的数据
         if (tagFilterMode === tagFilterKey.notSyncSpecTag) {
             console.log("不同步指定标签的数据");
-            if (API_VERSION.V2_Y2025_M02_D05.includes(pluginConfigData.base.version)){
+            if (API_VERSION.V2_Y2025_M02_D05.includes(pluginConfigData.base.version)) {
                 return memos.filter(memo => !hasCommonElements(memo.tags, tags))
             }
             return memos.filter(memo => !hasCommonElements(memo.property.tags, tags))
@@ -76,7 +76,7 @@ export class MemosApiServiceV2 {
         // 同步指定标签及无标签的数据
         if (tagFilterMode === tagFilterKey.syncSpecTagAndNoTag) {
             console.log("同步指定标签及无标签的数据");
-            if (API_VERSION.V2_Y2025_M02_D05.includes(pluginConfigData.base.version)){
+            if (API_VERSION.V2_Y2025_M02_D05.includes(pluginConfigData.base.version)) {
                 return memos.filter(memo => hasCommonElements(memo.tags, tags) || memo.tags.length === 0)
             }
             return memos.filter(memo => hasCommonElements(memo.property.tags, tags) || memo.property.tags.length === 0)
@@ -85,7 +85,7 @@ export class MemosApiServiceV2 {
         // 不同步指定标签及无标签的数据
         if (tagFilterMode === tagFilterKey.notSyncSpecTagAndNoTag) {
             console.log("不同步指定标签及无标签的数据");
-            if (API_VERSION.V2_Y2025_M02_D05.includes(pluginConfigData.base.version)){
+            if (API_VERSION.V2_Y2025_M02_D05.includes(pluginConfigData.base.version)) {
                 return memos.filter(memo => !hasCommonElements(memo.tags, tags) && memo.tags.length > 0)
             }
             return memos.filter(memo => !hasCommonElements(memo.property.tags, tags) && memo.property.tags.length > 0)
@@ -122,7 +122,7 @@ export class MemosApiServiceV2 {
                 resData = await ListMemos_v0_25(pageSize, pageToken, []);
             } else if (API_VERSION.V2_Y2025_M02_D05.includes(version)) {
                 resData = await ListMemos_v0_24(this.username, pageSize, pageToken);
-            } else if(API_VERSION.V2_MemosViewFull.includes(version)) {
+            } else if (API_VERSION.V2_MemosViewFull.includes(version)) {
                 const view = "MEMO_VIEW_FULL";
                 resData = await ListMemos(pageSize, pageToken, [], view);
             } else {
@@ -153,7 +153,8 @@ export class MemosApiServiceV2 {
             // 检查当前页是否还有更新时间大于等于 lastSyncTime 的数据，如果没有则退出循环
             // 修复：只有当当前页完全没有满足条件的数据且没有下一页时才退出
             // 如果当前页有满足条件的数据，即使数量少于总数据量，也要继续检查下一页
-            if (memos.length === 0 && !resData.nextPageToken) {
+            // Fix: Should always break if no nextPageToken, regardless of whether memos were found.
+            if (!resData.nextPageToken) {
                 break;
             }
 

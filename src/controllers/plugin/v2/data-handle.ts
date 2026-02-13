@@ -1,17 +1,17 @@
-import {debugMessage} from "@/utils";
-import {IResGetMemos} from "@/types/memos";
-import {pluginConfigData} from "@/index";
-import {IMemoV0_24_0, IMemoV2, IResourceV2} from "@/types/memos/v2";
-import {formatDateTime, toChinaTime} from "@/utils/misc/time";
-import {INewMemoV2, IResDataHandleRunV2} from "@/types/plugin/v2/handle";
+import { debugMessage } from "@/utils";
+import { IResGetMemos } from "@/types/memos";
+import { pluginConfigData } from "@/index";
+import { IMemoV0_24_0, IMemoV2, IResourceV2 } from "@/types/memos/v2";
+import { formatDateTime, toChinaTime } from "@/utils/misc/time";
+import { INewMemoV2, IResDataHandleRunV2 } from "@/types/plugin/v2/handle";
 import moment from "moment/moment";
-import {IContent, IContents, INewMemo} from "@/types/plugin";
-import {DataHandleBase} from "@/controllers/plugin/common/handle/DataHandleBase";
-import {INewMemoV1} from "@/types/plugin/v1/handle";
-import {API_VERSION} from "@/constants/memos";
+import { IContent, IContents, INewMemo } from "@/types/plugin";
+import { DataHandleBase } from "@/controllers/plugin/common/handle/DataHandleBase";
+import { INewMemoV1 } from "@/types/plugin/v1/handle";
+import { API_VERSION } from "@/constants/memos";
 
 
-export class DataHandleV2 extends DataHandleBase{
+export class DataHandleV2 extends DataHandleBase {
 
     async handelMemoV0240(memo: any) {
         debugMessage(pluginConfigData.debug.isDebug, "开始处理 Memos", memo);
@@ -87,7 +87,8 @@ export class DataHandleV2 extends DataHandleBase{
     }
 
     protected handleResources(memo: IMemoV2, contents: IContents): void {
-        let resources = memo.resources;
+        // Fix: Memos API v1 uses 'attachments', v2 uses 'resources'. Handle both and undefined.
+        let resources = memo.resources || (memo as any).attachments || [];
         this.getResourceContents(contents, resources);
         this.resources = this.resources.concat(resources);
     }
@@ -114,7 +115,7 @@ export class DataHandleV2 extends DataHandleBase{
     }
 
 
-    static async run(data: IResGetMemos) : Promise<IResDataHandleRunV2> {
+    static async run(data: IResGetMemos): Promise<IResDataHandleRunV2> {
         let dh = new DataHandleV2();
 
         await dh.handleMemos(data.new);

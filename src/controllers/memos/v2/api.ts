@@ -1,8 +1,8 @@
-import {METHOD} from "@/constants/utils/request";
-import {isEmptyValue} from "@/utils";
-import {Requests} from "@/utils/requests";
-import {IResListMemos} from "@/types/memos/v2/api";
-import {pluginConfigData} from "@/index";
+import { METHOD } from "@/constants/utils/request";
+import { isEmptyValue } from "@/utils";
+import { Requests } from "@/utils/requests";
+import { IResListMemos } from "@/types/memos/v2/api";
+import { pluginConfigData } from "@/index";
 
 
 /**
@@ -36,14 +36,15 @@ export async function ListUsers() {
  */
 export async function GetAuthStatus() {
     // 尝试使用API端点，如果失败则从JWT token解析
-    try {
-        const result = await Requests.send(METHOD.GET, "/api/v1/users/me");
-        if (result) {
-            return result;
-        }
-    } catch (error) {
-        console.warn('API auth endpoint failed, falling back to JWT parsing');
-    }
+    // /api/v1/users/me 接口不存在，改用 token 解析
+    // try {
+    //     const result = await Requests.send(METHOD.GET, "/api/v1/users/me");
+    //     if (result) {
+    //         return result;
+    //     }
+    // } catch (error) {
+    //     console.warn('API auth endpoint failed, falling back to JWT parsing');
+    // }
 
     // 从JWT token解析用户信息
     return parseUserFromToken();
@@ -104,7 +105,7 @@ export async function ListMemos(pageSize?: number, pageToken?: string, filter?: 
  * @param oldFilter - 旧版过滤器
  * @constructor
  */
-export async function ListMemos_v0_24(parent?:string, pageSize?: number, pageToken?: string, state?: string, sort?: string, direction?: string, filter?: any, oldFilter?: any) {
+export async function ListMemos_v0_24(parent?: string, pageSize?: number, pageToken?: string, state?: string, sort?: string, direction?: string, filter?: any, oldFilter?: any) {
     return await Requests.send(METHOD.GET, '/api/v1/memos', {
         parent: parent,
         pageSize: pageSize,
@@ -125,7 +126,7 @@ export async function ListMemos_v0_24(parent?:string, pageSize?: number, pageTok
  * @constructor
  */
 export async function ListMemos_v0_25(pageSize?: number, pageToken?: string, filter?: any) {
-    return await Requests.send(METHOD.GET, '/api/v2/memos', {
+    return await Requests.send(METHOD.GET, '/api/v1/memos', {
         pageSize: pageSize,
         pageToken: pageToken,
         filter: changeFilter(filter)

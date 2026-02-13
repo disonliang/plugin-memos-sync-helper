@@ -2,6 +2,7 @@ import {METHOD} from "@/constants/utils/request";
 import {isEmptyValue} from "@/utils";
 import {Requests} from "@/utils/requests";
 import {IResListMemos} from "@/types/memos/v2/api";
+import {pluginConfigData} from "@/index";
 
 
 /**
@@ -34,7 +35,41 @@ export async function ListUsers() {
  * @constructor
  */
 export async function GetAuthStatus() {
-    return await Requests.send(METHOD.POST, "/api/v1/auth/status");
+    // 尝试使用API端点，如果失败则从JWT token解析
+    try {
+        const result = await Requests.send(METHOD.GET, "/api/v1/users/me");
+        if (result) {
+            return result;
+        }
+    } catch (error) {
+        console.warn('API auth endpoint failed, falling back to JWT parsing');
+    }
+
+    // 从JWT token解析用户信息
+    return parseUserFromToken();
+}
+
+/**
+ * 从JWT token解析用户信息
+ */
+function parseUserFromToken() {
+    try {
+        const token = pluginConfigData.base.token;
+        if (!token) {
+            return null;
+        }
+
+        const payload = token.split('.')[1];
+        const decoded = JSON.parse(atob(payload));
+
+        return {
+            name: decoded.name || decoded.username || 'Unknown',
+            username: decoded.name || decoded.username || 'Unknown'
+        };
+    } catch (error) {
+        console.error('Failed to parse JWT token:', error);
+        return null;
+    }
 }
 
 

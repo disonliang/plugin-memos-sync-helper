@@ -1,5 +1,5 @@
 import {pluginConfigData} from "@/index";
-import {DownloadResourceByName, GetAuthStatus, GetResourceBinary, ListMemos, ListMemos_v0_24} from "@/controllers/memos/v2/api"
+import {DownloadResourceByName, GetAuthStatus, GetAuthStatus_v2, GetResourceBinary, ListMemos, ListMemos_v0_24, ListMemos_v0_25} from "@/controllers/memos/v2/api"
 import {debugMessage, hasCommonElements, isEmptyValue} from "@/utils";
 import {toChinaTime, formatDateTime,} from "@/utils/misc/time";
 import {IResGetMemos} from "@/types/memos";
@@ -18,8 +18,13 @@ export class MemosApiServiceV2 {
      * @private
      */
     private static async initData() {
-        const userData = await this.getUserData();
-        this.username = userData.name;
+        if (API_VERSION.V2_API.includes(pluginConfigData.base.version)) {
+            const userData = await GetAuthStatus_v2();
+            this.username = userData.name;
+        } else {
+            const userData = await GetAuthStatus();
+            this.username = userData.name;
+        }
     }
 
     private static async tagFilter(memos: IMemoV2[])  {
@@ -114,7 +119,9 @@ export class MemosApiServiceV2 {
         while (true) {
             let resData: IResListMemos;
             // 调用 ListMemos 函数获取一页数据
-            if (API_VERSION.V2_Y2025_M02_D05.includes(version)) {
+            if (API_VERSION.V2_API.includes(version)) {
+                resData = await ListMemos_v0_25(pageSize, pageToken, filters);
+            } else if (API_VERSION.V2_Y2025_M02_D05.includes(version)) {
                 resData = await ListMemos_v0_24(this.username, pageSize, pageToken);
             } else if(API_VERSION.V2_MemosViewFull.includes(version)) {
                 const view = "MEMO_VIEW_FULL";
@@ -170,8 +177,13 @@ export class MemosApiServiceV2 {
      * 授权校验
      */
     static async checkAccessToken() {
-        const userData = await GetAuthStatus();
-        return !isEmptyValue(userData);
+        if (API_VERSION.V2_API.includes(pluginConfigData.base.version)) {
+            const userData = await GetAuthStatus_v2();
+            return !isEmptyValue(userData);
+        } else {
+            const userData = await GetAuthStatus();
+            return !isEmptyValue(userData);
+        }
     }
 
     /**

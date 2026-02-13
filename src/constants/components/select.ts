@@ -5,7 +5,8 @@ export enum versionKey {
     v0_22_0,
     v0_22_1,
     v0_23_0,
-    v0_24_0
+    v0_24_0,
+    v0_25_0
 }
 
 export const VERSION_OPTIONS: IOptions = [
@@ -27,7 +28,11 @@ export const VERSION_OPTIONS: IOptions = [
     },
     {
         key: versionKey.v0_24_0,
-        text: "v0.24.0 及以上"
+        text: "v0.24.0"
+    },
+    {
+        key: versionKey.v0_25_0,
+        text: "v0.25.0 及以上"
     }
 ]
 

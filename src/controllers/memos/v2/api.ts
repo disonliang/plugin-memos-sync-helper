@@ -37,6 +37,14 @@ export async function GetAuthStatus() {
     return await Requests.send(METHOD.POST, "/api/v1/auth/status");
 }
 
+/**
+ * 获取用户的当前身份验证信息 v2
+ * @constructor
+ */
+export async function GetAuthStatus_v2() {
+    return await Requests.send(METHOD.GET, "/api/v2/user/me");
+}
+
 
 // **************************************** MemoService ****************************************
 
@@ -80,6 +88,21 @@ export async function ListMemos_v0_24(parent?:string, pageSize?: number, pageTok
         direction: direction,
         filter: changeFilter(filter),
         oldFilter: changeFilter(oldFilter)
+    });
+}
+
+/**
+ * 列出带有分页和过滤器的备忘录 v0.25.0
+ * @param pageSize - 返回的最大条数
+ * @param pageToken - 检索后续页面的令牌
+ * @param filter - 过滤器
+ * @constructor
+ */
+export async function ListMemos_v0_25(pageSize?: number, pageToken?: string, filter?: any) {
+    return await Requests.send(METHOD.GET, '/api/v2/memos', {
+        pageSize: pageSize,
+        pageToken: pageToken,
+        filter: changeFilter(filter)
     });
 }
 

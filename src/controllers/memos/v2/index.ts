@@ -19,6 +19,9 @@ export class MemosApiServiceV2 {
      */
     private static async initData() {
         const userData = await GetAuthStatus();
+        if (!userData) {
+            throw new Error('初始化失败：无法获取用户信息');
+        }
         this.username = userData.name;
     }
 
@@ -160,6 +163,9 @@ export class MemosApiServiceV2 {
      */
     static async getUserData() {
         const userData = await GetAuthStatus();
+        if (!userData) {
+            throw new Error('获取用户信息失败：认证无效或服务器错误');
+        }
         return {
             /**
              * 用户名称

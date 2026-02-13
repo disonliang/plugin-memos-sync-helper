@@ -128,6 +128,12 @@ export class MemosApiServiceV2 {
                 resData = await ListMemos(pageSize, pageToken, filters);
             }
 
+            // 检查API响应是否有效
+            if (!resData || !resData.memos) {
+                debugMessage(pluginConfigData.debug.isDebug, "API响应无效或无数据", resData);
+                break;
+            }
+
             // 将更新时间晚于等于 lastSyncTime 的数据添加到 memos 列表中
             const memos = resData.memos.filter(
                 memo => moment(toChinaTime(memo.updateTime)).isSameOrAfter(formatDateTime(lastSyncTime))

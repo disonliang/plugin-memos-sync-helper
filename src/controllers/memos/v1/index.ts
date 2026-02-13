@@ -28,6 +28,12 @@ export class MemosApiServiceV1 {
 
             debugMessage(pluginConfigData.debug.isDebug, "resData", resData);
 
+            // 检查API响应是否有效
+            if (!resData) {
+                debugMessage(pluginConfigData.debug.isDebug, "API响应无效", resData);
+                break;
+            }
+
             // 将更新时间晚于等于 lastSyncTime 的数据添加到 memos 列表中
             const memos = resData.filter(
                 // memo => moment(formatDate(memo.updatedTs)).isSameOrAfter(formatDateTime(lastSyncTime))

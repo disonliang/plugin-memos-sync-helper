@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.24
+## 0.25.0
 
 * 修复获取 Memos 时的无限循环问题
 * 修复因缺少 resources 字段导致的 "s is not iterable" 错误

@@ -151,7 +151,9 @@ export class MemosApiServiceV2 {
             allMemos.push(...memos);
 
             // 检查当前页是否还有更新时间大于等于 lastSyncTime 的数据，如果没有则退出循环
-            if (memos.length < resData.memos.length || !resData.nextPageToken) {
+            // 修复：只有当当前页完全没有满足条件的数据且没有下一页时才退出
+            // 如果当前页有满足条件的数据，即使数量少于总数据量，也要继续检查下一页
+            if (memos.length === 0 && !resData.nextPageToken) {
                 break;
             }
 

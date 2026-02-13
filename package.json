@@ -1,6 +1,6 @@
 {
   "name": "plugin-memos-sync-helper",
-  "version": "0.2.20",
+  "version": "0.2.22",
   "type": "module",
   "description": "This is a plugin for sync Memos data to SiYuan",
   "repository": "",

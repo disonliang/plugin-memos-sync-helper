@@ -1,7 +1,7 @@
 import {pluginConfigData} from "@/index";
 import {DownloadResourceByName, GetAuthStatus, GetResourceBinary, ListMemos, ListMemos_v0_24, ListMemos_v0_25} from "@/controllers/memos/v2/api"
 import {debugMessage, hasCommonElements, isEmptyValue} from "@/utils";
-import {toChinaTime, formatDateTime,} from "@/utils/misc/time";
+import {toChinaTime, formatDateTime, isUpdateNewerThanSyncTime} from "@/utils/misc/time";
 import {IResGetMemos} from "@/types/memos";
 import moment from "moment";
 import {IMemoV2, IResourceV2} from "@/types/memos/v2";
@@ -136,8 +136,9 @@ export class MemosApiServiceV2 {
 
             // 将更新时间晚于等于 lastSyncTime 的数据添加到 memos 列表中
             const memos = resData.memos.filter(
-                memo => moment(toChinaTime(memo.updateTime)).isSameOrAfter(formatDateTime(lastSyncTime))
+                memo => isUpdateNewerThanSyncTime(memo.updateTime, lastSyncTime)
             );
+            debugMessage(pluginConfigData.debug.isDebug, `过滤前数据数: ${resData.memos.length}, 过滤后数据数: ${memos.length}, lastSyncTime: ${lastSyncTime}`);
             allMemos.push(...memos);
 
             // 检查当前页是否还有更新时间大于等于 lastSyncTime 的数据，如果没有则退出循环

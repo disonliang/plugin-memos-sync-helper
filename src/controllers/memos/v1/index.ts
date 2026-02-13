@@ -36,9 +36,13 @@ export class MemosApiServiceV1 {
 
             // 将更新时间晚于等于 lastSyncTime 的数据添加到 memos 列表中
             const memos = resData.filter(
-                // memo => moment(formatDate(memo.updatedTs)).isSameOrAfter(formatDateTime(lastSyncTime))
-                memo => moment(formatDateTime(memo.updatedTs)).isSameOrAfter(formatDateTime(lastSyncTime))
+                // 比对时间：将时间戳转换为格式化时间，然后进行字符串比对
+                memo => {
+                    const memoUpdateTime = formatDateTime(memo.updatedTs * 1000);
+                    return memoUpdateTime >= lastSyncTime;
+                }
             );
+            debugMessage(pluginConfigData.debug.isDebug, `过滤前数据数: ${resData.length}, 过滤后数据数: ${memos.length}, lastSyncTime: ${lastSyncTime}`);
             allMemos.push(...memos);
 
             debugMessage(pluginConfigData.debug.isDebug, "memos", memos);

@@ -1,7 +1,7 @@
-import {IConfig} from "@/types/config/default";
+import { IConfig } from "@/types/config/default";
 
-import {memosSortKey, checkSyncMemosKey, syncPlanKey, tagFilterKey} from "@/constants/components/select"
-import {DEFAULT_VERSION} from "@/constants/memos";
+import { memosSortKey, checkSyncMemosKey, syncPlanKey, tagFilterKey } from "@/constants/components/select"
+import { DEFAULT_VERSION } from "@/constants/memos";
 
 export const DEFAULT_CONFIG: IConfig = {
     base: {
@@ -14,7 +14,7 @@ export const DEFAULT_CONFIG: IConfig = {
         useTemplate: false,
         resourceSavePath: "assets/memos/resources",
         memosSort: memosSortKey.asc,
-        checkSyncMemos: checkSyncMemosKey.start
+        checkSyncMemos: checkSyncMemosKey.no
     },
     advanced: {
         formatDataTime: "YYYY-MM-DD HH:mm:ss",

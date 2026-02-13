@@ -158,6 +158,11 @@ export class MemosApiServiceV2 {
                 break;
             }
 
+            // Fix: Check if nextPageToken is the same as current pageToken to prevent infinite loop
+            if (pageToken === resData.nextPageToken) {
+                break;
+            }
+
             // 更新 pageToken 以获取下一页数据
             pageToken = resData.nextPageToken;
         }

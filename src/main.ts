@@ -428,24 +428,22 @@ export async function main(plugin: InstanceType<typeof PluginMemosSyncHelper>) {
             await PluginMaster.runSync();
             await pushMsg("同步完成！");
 
-            // 修改上次同步时间
-            if (!(pluginConfigData.debug.isDebug && pluginConfigData.debug.isAutoUpdateTime === false)) {
-                debugMessage(pluginConfigData.debug.isDebug, "正在修改上次同步时间……");
+            // 修改上次同步时间（始终更新，不受调试模式影响）
+            debugMessage(pluginConfigData.debug.isDebug, "正在修改上次同步时间……");
 
-                let config: IConfig = pluginConfigData;
+            let config: IConfig = pluginConfigData;
 
-                await new Promise<void>((resolve) => {
-                    setTimeout(() => {
-                        config.filter.lastSyncTime = moment().format("YYYY-MM-DD HH:mm:ss");
-                        debugMessage(pluginConfigData.debug.isDebug, "配置", config);
-                        resolve(); // 标志 Promise 的状态已经改变
-                    }, 1000);
-                });
+            await new Promise<void>((resolve) => {
+                setTimeout(() => {
+                    config.filter.lastSyncTime = moment().format("YYYY-MM-DD HH:mm:ss");
+                    debugMessage(pluginConfigData.debug.isDebug, "新的同步时间", config.filter.lastSyncTime);
+                    resolve();
+                }, 1000);
+            });
 
-                await plugin.updateConfig(config);
+            await plugin.updateConfig(config);
 
-                debugMessage(pluginConfigData.debug.isDebug, "上次同步时间修改完成！");
-            }
+            debugMessage(pluginConfigData.debug.isDebug, "上次同步时间修改完成！");
         } else {
             await pushMsg("暂无新数据！");
         }

@@ -135,6 +135,11 @@ export class MemosApiServiceV2 {
                 break;
             }
 
+            // 打印第一条 memo 的 creator 格式，便于调试
+            if (resData.memos.length > 0) {
+                debugMessage(pluginConfigData.debug.isDebug, `第一条memo.creator: "${resData.memos[0].creator}", 当前用户: "${this.username}"`);
+            }
+
             // 先按照更新时间过滤，然后再按照creator过滤（在本地进行）
             const memos = resData.memos.filter(
                 memo => {
@@ -144,7 +149,13 @@ export class MemosApiServiceV2 {
                     }
                     // 检查creator是否匹配当前用户（过滤掉其他人的公开内容）
                     if (memo.creator && this.username) {
-                        if (memo.creator !== this.username) {
+                        // 灵活匹配：支持 "users/1" vs "users/1"、"users/1" vs "admin"、"admin" vs "users/admin" 等格式
+                        const creatorMatch =
+                            memo.creator === this.username ||                          // 完全匹配
+                            memo.creator.endsWith('/' + this.username) ||              // creator="users/admin", username="admin"
+                            this.username.endsWith('/' + memo.creator) ||              // username="users/1", creator="1"
+                            memo.creator.split('/').pop() === this.username.split('/').pop();  // 取最后一段比较
+                        if (!creatorMatch) {
                             return false;
                         }
                     }

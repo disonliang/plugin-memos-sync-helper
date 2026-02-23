@@ -35,18 +35,18 @@ export async function ListUsers() {
  * @constructor
  */
 export async function GetAuthStatus() {
-    // 尝试使用API端点，如果失败则从JWT token解析
-    // /api/v1/users/me 接口不存在，改用 token 解析
-    // try {
-    //     const result = await Requests.send(METHOD.GET, "/api/v1/users/me");
-    //     if (result) {
-    //         return result;
-    //     }
-    // } catch (error) {
-    //     console.warn('API auth endpoint failed, falling back to JWT parsing');
-    // }
+    // 优先尝试 API 端点获取用户信息（返回的 name 字段为 "users/X" 格式）
+    try {
+        const result = await Requests.send(METHOD.GET, "/api/v1/auth/status");
+        if (result && result.name) {
+            console.log('[Memos] Auth status from API:', result.name);
+            return result;
+        }
+    } catch (error) {
+        console.warn('[Memos] API auth endpoint failed, falling back to JWT parsing');
+    }
 
-    // 从JWT token解析用户信息
+    // 降级：从JWT token解析用户信息
     return parseUserFromToken();
 }
 
@@ -62,6 +62,7 @@ function parseUserFromToken() {
 
         const payload = token.split('.')[1];
         const decoded = JSON.parse(atob(payload));
+        console.log('[Memos] JWT decoded payload:', JSON.stringify(decoded));
 
         return {
             name: decoded.name || decoded.username || 'Unknown',

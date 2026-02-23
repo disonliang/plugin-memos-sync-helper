@@ -39,11 +39,11 @@ export async function GetAuthStatus() {
     try {
         const result = await Requests.send(METHOD.GET, "/api/v1/auth/status");
         if (result && result.name) {
-            console.log('[Memos] Auth status from API:', result.name);
+            console.log('[Memos] Auth status from API:', JSON.stringify(result));
             return result;
         }
     } catch (error) {
-        console.warn('[Memos] API auth endpoint failed, falling back to JWT parsing');
+        console.warn('[Memos] /api/v1/auth/status failed:', error);
     }
 
     // 降级：从JWT token解析用户信息
@@ -52,6 +52,9 @@ export async function GetAuthStatus() {
 
 /**
  * 从JWT token解析用户信息
+ * Memos JWT payload 通常包含:
+ *   - name: "users/1" (资源名) 或 "admin" (显示名)
+ *   - sub: "users/1" 或 数字用户ID
  */
 function parseUserFromToken() {
     try {
@@ -60,16 +63,44 @@ function parseUserFromToken() {
             return null;
         }
 
-        const payload = token.split('.')[1];
+        // 检查 token 是否是 JWT 格式（三段式 xxx.yyy.zzz）
+        const parts = token.split('.');
+        if (parts.length !== 3) {
+            // 不是 JWT，可能是 Access Token，无法解析用户名
+            console.warn('[Memos] Token is not JWT format, cannot parse user info');
+            return {
+                name: null,
+                username: null
+            };
+        }
+
+        const payload = parts[1];
         const decoded = JSON.parse(atob(payload));
         console.log('[Memos] JWT decoded payload:', JSON.stringify(decoded));
 
+        // 尝试获取 "users/X" 格式的资源名
+        // 优先级: name(如果已是users/格式) > sub(如果已是users/格式) > 用sub构造
+        let resourceName = null;
+
+        if (decoded.name && String(decoded.name).startsWith('users/')) {
+            resourceName = decoded.name;
+        } else if (decoded.sub && String(decoded.sub).startsWith('users/')) {
+            resourceName = decoded.sub;
+        } else if (decoded.sub && /^\d+$/.test(String(decoded.sub))) {
+            resourceName = `users/${decoded.sub}`;
+        } else {
+            // 无法确定 users/X 格式，设为 null，后续跳过 creator 过滤
+            resourceName = decoded.name || decoded.sub || null;
+        }
+
+        console.log('[Memos] Resolved user resource name:', resourceName);
+
         return {
-            name: decoded.name || decoded.username || 'Unknown',
-            username: decoded.name || decoded.username || 'Unknown'
+            name: resourceName,
+            username: decoded.username || decoded.name || 'Unknown'
         };
     } catch (error) {
-        console.error('Failed to parse JWT token:', error);
+        console.error('[Memos] Failed to parse JWT token:', error);
         return null;
     }
 }

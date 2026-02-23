@@ -110,16 +110,22 @@ export class MemosApiServiceV2 {
 
         let allMemos = [];
 
-        // 注意：creator过滤器可能不被所有Memos版本支持，改为在本地过滤
-        // let filters = [
-        //     `creator == "${this.username}"`
-        // ];
+        // 判断当前用户名是否为可用的 "users/X" 资源格式
+        const hasValidUserName = this.username && String(this.username).startsWith('users/');
+        debugMessage(pluginConfigData.debug.isDebug, `用户资源名: "${this.username}", 有效: ${hasValidUserName}`);
+
+        // 为 v0.25+ 构建服务端过滤器
+        let serverFilters = [];
+        if (hasValidUserName && API_VERSION.V2_API.includes(version)) {
+            serverFilters.push(`creator == "${this.username}"`);
+            debugMessage(pluginConfigData.debug.isDebug, `使用服务端 creator 过滤: ${serverFilters[0]}`);
+        }
 
         while (true) {
             let resData: IResListMemos;
-            // 调用 ListMemos 函数获取一页数据（不使用creator过滤器）
+            // 调用 ListMemos 函数获取一页数据
             if (API_VERSION.V2_API.includes(version)) {
-                resData = await ListMemos_v0_25(pageSize, pageToken, []);
+                resData = await ListMemos_v0_25(pageSize, pageToken, serverFilters);
             } else if (API_VERSION.V2_Y2025_M02_D05.includes(version)) {
                 resData = await ListMemos_v0_24(this.username, pageSize, pageToken);
             } else if (API_VERSION.V2_MemosViewFull.includes(version)) {
@@ -140,22 +146,17 @@ export class MemosApiServiceV2 {
                 debugMessage(pluginConfigData.debug.isDebug, `第一条memo.creator: "${resData.memos[0].creator}", 当前用户: "${this.username}"`);
             }
 
-            // 先按照更新时间过滤，然后再按照creator过滤（在本地进行）
+            // 本地过滤：按更新时间 + creator
             const memos = resData.memos.filter(
                 memo => {
                     // 检查更新时间
                     if (!isUpdateNewerThanSyncTime(memo.updateTime, lastSyncTime)) {
                         return false;
                     }
-                    // 检查creator是否匹配当前用户（过滤掉其他人的公开内容）
-                    if (memo.creator && this.username) {
-                        // 灵活匹配：支持 "users/1" vs "users/1"、"users/1" vs "admin"、"admin" vs "users/admin" 等格式
-                        const creatorMatch =
-                            memo.creator === this.username ||                          // 完全匹配
-                            memo.creator.endsWith('/' + this.username) ||              // creator="users/admin", username="admin"
-                            this.username.endsWith('/' + memo.creator) ||              // username="users/1", creator="1"
-                            memo.creator.split('/').pop() === this.username.split('/').pop();  // 取最后一段比较
-                        if (!creatorMatch) {
+                    // 仅当有有效用户名且未使用服务端过滤时，才进行本地 creator 过滤
+                    // 对于 v0.25（V2_API）已在服务端过滤，无需本地再过滤
+                    if (!API_VERSION.V2_API.includes(version) && hasValidUserName && memo.creator) {
+                        if (memo.creator !== this.username) {
                             return false;
                         }
                     }

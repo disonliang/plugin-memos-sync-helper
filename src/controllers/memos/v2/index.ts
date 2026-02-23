@@ -142,12 +142,16 @@ export class MemosApiServiceV2 {
                     if (!isUpdateNewerThanSyncTime(memo.updateTime, lastSyncTime)) {
                         return false;
                     }
-                    // 检查creator是否匹配（可选，如果需要过滤）
-                    // 注意：这里不过滤creator，获取所有数据
+                    // 检查creator是否匹配当前用户（过滤掉其他人的公开内容）
+                    if (memo.creator && this.username) {
+                        if (memo.creator !== this.username) {
+                            return false;
+                        }
+                    }
                     return true;
                 }
             );
-            debugMessage(pluginConfigData.debug.isDebug, `过滤前数据数: ${resData.memos.length}, 过滤后数据数: ${memos.length}, lastSyncTime: ${lastSyncTime}`);
+            debugMessage(pluginConfigData.debug.isDebug, `过滤前数据数: ${resData.memos.length}, 过滤后数据数: ${memos.length}, lastSyncTime: ${lastSyncTime}, currentUser: ${this.username}`);
             allMemos.push(...memos);
 
             // 检查当前页是否还有更新时间大于等于 lastSyncTime 的数据，如果没有则退出循环

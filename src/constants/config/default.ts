@@ -33,6 +33,6 @@ export const DEFAULT_CONFIG: IConfig = {
     },
     debug: {
         isDebug: false,
-        isAutoUpdateTime: false
+        isAutoUpdateTime: true
     }
 }

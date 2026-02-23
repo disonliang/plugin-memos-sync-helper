@@ -114,18 +114,14 @@ export class MemosApiServiceV2 {
         const hasValidUserName = this.username && String(this.username).startsWith('users/');
         debugMessage(pluginConfigData.debug.isDebug, `用户资源名: "${this.username}", 有效: ${hasValidUserName}`);
 
-        // 为 v0.25+ 构建服务端过滤器
-        let serverFilters = [];
-        if (hasValidUserName && API_VERSION.V2_API.includes(version)) {
-            serverFilters.push(`creator == "${this.username}"`);
-            debugMessage(pluginConfigData.debug.isDebug, `使用服务端 creator 过滤: ${serverFilters[0]}`);
-        }
+        // 注意：不使用服务端 creator 过滤（Memos API 不支持，会返回 400）
+        // 改为在本地进行 creator 过滤
 
         while (true) {
             let resData: IResListMemos;
-            // 调用 ListMemos 函数获取一页数据
+            // 调用 ListMemos 函数获取一页数据（不传 creator 过滤器）
             if (API_VERSION.V2_API.includes(version)) {
-                resData = await ListMemos_v0_25(pageSize, pageToken, serverFilters);
+                resData = await ListMemos_v0_25(pageSize, pageToken, []);
             } else if (API_VERSION.V2_Y2025_M02_D05.includes(version)) {
                 resData = await ListMemos_v0_24(this.username, pageSize, pageToken);
             } else if (API_VERSION.V2_MemosViewFull.includes(version)) {
@@ -153,9 +149,8 @@ export class MemosApiServiceV2 {
                     if (!isUpdateNewerThanSyncTime(memo.updateTime, lastSyncTime)) {
                         return false;
                     }
-                    // 仅当有有效用户名且未使用服务端过滤时，才进行本地 creator 过滤
-                    // 对于 v0.25（V2_API）已在服务端过滤，无需本地再过滤
-                    if (!API_VERSION.V2_API.includes(version) && hasValidUserName && memo.creator) {
+                    // 本地 creator 过滤：仅当有有效 "users/X" 格式用户名时才过滤
+                    if (hasValidUserName && memo.creator) {
                         if (memo.creator !== this.username) {
                             return false;
                         }
